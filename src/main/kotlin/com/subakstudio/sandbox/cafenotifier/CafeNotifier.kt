@@ -1,12 +1,9 @@
 package com.subakstudio.sandbox.cafenotifier
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.TelegramBotAdapter
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.response.GetUpdatesResponse
-import java.io.File
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -17,25 +14,24 @@ open class CafeNotifier {
 
     private var bot: TelegramBot? = null
     private var data: CafeNotifierData = CafeNotifierData()
+    private var config: CafeNotifierConfig = CafeNotifierConfig()
 
     companion object {
         @JvmStatic fun main(args: Array<String>) {
             val app: CafeNotifier = CafeNotifier()
-            app.init()
-            app.start()
+            try {
+                app.init()
+                app.start()
+            } catch(e: CafeNotifierException) {
+                System.err?.println("Failed to run CafeNotifier due to ${e.cause}")
+            }
         }
     }
 
     private fun init() {
-        val configFile = File(this.javaClass.getResource("/cafenotifier.config.json").file)
-        val om: ObjectMapper = ObjectMapper()
-        val rootNode: JsonNode = om.readTree(configFile)
-        val token: String = rootNode.get("telegram").get("token").asText()
-        println("$rootNode, $token")
-
         data.load()
-
-        bot = TelegramBotAdapter.build(token)
+        config.load()
+        bot = TelegramBotAdapter.build(config.token)
     }
 
     private fun start() {
