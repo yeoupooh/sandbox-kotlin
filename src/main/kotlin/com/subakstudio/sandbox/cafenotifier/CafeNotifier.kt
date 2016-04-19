@@ -1,15 +1,13 @@
 package com.subakstudio.sandbox.cafenotifier
 
-import com.fasterxml.jackson.core.JsonFactory
-import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.TelegramBotAdapter
+import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.response.GetUpdatesResponse
 import java.io.File
-import java.io.FileOutputStream
+import java.util.*
 import kotlin.concurrent.thread
 
 /**
@@ -18,8 +16,7 @@ import kotlin.concurrent.thread
 open class CafeNotifier {
 
     private var bot: TelegramBot? = null
-    private var latestUpdateId = 0;
-    private val dataFile = File(System.getProperty("user.home"), ("cafenotifier.data.json"))
+    private var data: CafeNotifierData = CafeNotifierData()
 
     companion object {
         @JvmStatic fun main(args: Array<String>) {
@@ -36,29 +33,9 @@ open class CafeNotifier {
         val token: String = rootNode.get("telegram").get("token").asText()
         println("$rootNode, $token")
 
-        loadDataFile()
+        data.load()
 
         bot = TelegramBotAdapter.build(token)
-    }
-
-    private fun loadDataFile() {
-        if (dataFile.exists()) {
-            val om: ObjectMapper = ObjectMapper()
-            val rootNode: JsonNode = om.readTree(dataFile)
-            latestUpdateId = rootNode.get("lastUpdatedId").asInt()
-            println("loadDataFile: latestUpdateId: $latestUpdateId")
-        } else {
-            saveDataFile()
-        }
-    }
-
-    private fun saveDataFile() {
-        val om: ObjectMapper = ObjectMapper()
-        var rootNode: ObjectNode = om.createObjectNode()
-        rootNode.put("lastUpdatedId", latestUpdateId)
-        var gen: JsonGenerator = JsonFactory().createGenerator(FileOutputStream(dataFile))
-        om.writeTree(gen, rootNode);
-        println("saveDataFile: data file saved.")
     }
 
     private fun start() {
@@ -66,20 +43,30 @@ open class CafeNotifier {
 
         thread() {
             while (true) {
-                // FIXME Retrofit is cacheing updates. So once get update, no updates next time.
-                response = bot?.getUpdates(10, 10, 5000) as GetUpdatesResponse
+                var messages = ArrayList<Message>()
+                // earliest
+                val offset = 0
+                // 1-100, default: 100
+                val limit = 100
+                // seconds, default: 0
+                val timeout = 0
+                response = bot?.getUpdates(offset, limit, timeout) as GetUpdatesResponse
                 response.let {
                     if (response.isOk) {
                         var foundNew: Boolean = false
                         for (update in response.updates()) {
-                            if (update.updateId() > latestUpdateId) {
+                            if (update.updateId() > data.latestUpdateId) {
                                 println("start: new update: $update")
-                                latestUpdateId = update.updateId()
+                                data.latestUpdateId = update.updateId()
+                                messages.add(update.message())
                                 foundNew = true
                             }
                         }
                         if (foundNew) {
-                            saveDataFile()
+                            data.save()
+                            for (message in messages) {
+                                bot?.sendMessage(message.chat().id(), "message from bot: ${message.from().username()} said ${message.text()}")
+                            }
                         } else {
                             println("start: no updates.")
                         }
@@ -90,3 +77,4 @@ open class CafeNotifier {
         }
     }
 }
+

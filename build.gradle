@@ -1,6 +1,13 @@
 group 'com.subakstudio'
 version '1.0-SNAPSHOT'
 
+allprojects {
+    repositories {
+        jcenter()
+//        maven { url "https://jitpack.io" }
+    }
+}
+
 buildscript {
     repositories {
         mavenCentral()
@@ -29,6 +36,7 @@ dependencies {
 
     // Telegram Bot API for Java
     compile 'com.github.pengrad:java-telegram-bot-api:1.3.2'
+//    compile 'com.github.yeoupooh:java-telegram-bot-api:1.3.2'
 
     // Jackson
     compile 'com.fasterxml.jackson.core:jackson-databind:2.7.3'
