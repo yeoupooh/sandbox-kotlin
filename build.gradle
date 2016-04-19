@@ -1,0 +1,44 @@
+group 'com.subakstudio'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.0.1"
+    }
+}
+
+apply plugin: 'groovy'
+apply plugin: 'java'
+apply plugin: 'kotlin'
+apply plugin: 'application'
+
+sourceCompatibility = 1.8
+
+mainClassName = 'com.subakstudio.sandbox.cafenotifier.CafeNotifier'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:1.0.1"
+    compile 'org.codehaus.groovy:groovy-all:2.3.11'
+
+    // Telegram Bot API for Java
+    compile 'com.github.pengrad:java-telegram-bot-api:1.3.2'
+
+    // Jackson
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.3'
+
+    // OkHttp
+    compile 'com.squareup.okhttp:okhttp:2.7.5'
+
+    // Retrofit
+    compile 'com.squareup.retrofit2:retrofit:2.0.2'
+    compile 'com.squareup.retrofit2:converter-gson:2.0.2'
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
