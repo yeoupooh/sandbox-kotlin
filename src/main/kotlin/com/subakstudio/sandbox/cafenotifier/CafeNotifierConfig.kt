@@ -9,17 +9,23 @@ import java.io.File
  */
 class CafeNotifierConfig() {
     var token: String? = null
+    var clubId: String? = null
+    var telegramIntervalMs: Long = 0
+    var cafeIntervalMs: Long = 0
+    private val configFile = File(System.getProperty("user.home"), ("cafenotifier.config.json"))
 
     fun load() {
-        val configUrl = this.javaClass.getResource("/cafenotifier.config.json")
-        if (configUrl != null) {
-            val configFile = File(this.javaClass.getResource("/cafenotifier.config.json").file)
+        if (configFile.exists()) {
             val om: ObjectMapper = ObjectMapper()
             val rootNode: JsonNode = om.readTree(configFile)
             token = rootNode.get("telegram").get("token").asText()
-            println("$rootNode, $token")
+            telegramIntervalMs = rootNode.get("telegram").get("intervalSec").asLong() * 1000
+            clubId = rootNode.get("cafe").get("clubid").asText()
+            cafeIntervalMs = rootNode.get("cafe").get("intervalSec").asLong() * 1000
+            println("CafeNotifierConfig: $rootNode, $token")
         } else {
-            throw CafeNotifierException("can't load config file.")
+            throw CafeNotifierException("Can't load config file.")
         }
     }
+
 }

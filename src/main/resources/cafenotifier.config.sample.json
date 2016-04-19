@@ -1,5 +1,10 @@
 {
   "telegram": {
+    "intervalSec": 1,
     "token": "your bot token here"
+  },
+  "cafe": {
+    "intervalSec": 60,
+    "clubid": 1234567
   }
 }
