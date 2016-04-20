@@ -1,2 +1,3 @@
 rootProject.name = 'sandbox-kotlin'
+include 'crawler4j'
 
