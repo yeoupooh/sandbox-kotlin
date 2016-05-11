@@ -3,6 +3,8 @@ package com.subakstudio.sandbox.cafenotifier
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.TelegramBotAdapter
 import com.pengrad.telegrambot.model.Message
+import com.pengrad.telegrambot.model.request.ParseMode
+import com.pengrad.telegrambot.model.request.ReplyKeyboardHide
 import com.pengrad.telegrambot.response.GetUpdatesResponse
 import com.subakstudio.sandbox.cafenotifier.search.CafeSearch
 import com.subakstudio.sandbox.cafenotifier.search.CafeSearchResult
@@ -80,22 +82,31 @@ open class CafeNotifier {
                     }
                 }
                 if (foundNew) {
+                    // Save updated messages
                     data.save()
                     for (message in messages) {
                         if (message.text().startsWith("/start ")) {
                             var keyword = message.text().substring(7)
-                            bot?.sendMessage(message.chat().id(), "start to monitor $keyword")
+                            if (data.containsChatId(message.chat().id())) {
+                                bot?.sendMessage(message.chat().id(), "change to monitor ${data.getKeyword(message.chat().id())} to $keyword")
+                            } else {
+                                bot?.sendMessage(message.chat().id(), "start to monitor $keyword")
+                            }
                             data.add(message.chat().id(), keyword)
+                            // Save for new keyword
+                            data.save()
                         } else if (message.text().equals("/stop")) {
                             var user = data.users.get(message.chat().id())
                             bot?.sendMessage(message.chat().id(), "stop to monitor ${user?.keyword}")
                             data.remove(message.chat().id())
+                            // Save for removed keyword
+                            data.save()
                         } else {
                             bot?.sendMessage(message.chat().id(), "Unknown command: ${message.text()}")
                         }
                     }
                 } else {
-                    println("updateChats: no updates.")
+                    println("updateChats: no new chats.")
                 }
             }
         }
@@ -103,11 +114,15 @@ open class CafeNotifier {
 
     private fun updateCafe() {
         var foundNewArticle: Boolean = false
+        if (data.users.size == 0) {
+            println("updateCafe: no users")
+            return
+        }
         for (user in data.users.values) {
             var searchResult: CafeSearchResult = search?.search(user.keyword)!!
             for (article in searchResult.articles) {
                 if (user.lastArticleId < article.id) {
-                    bot?.sendMessage(user.chatId, "${article.title} by ${article.name}\n\n${article.href}")
+                    bot?.sendMessage(user.chatId, "*${article.title}* by *${article.name}*\n\n[${article.href}](${article.href})", ParseMode.Markdown, false, 0, ReplyKeyboardHide())
                     user.lastArticleId = article.id
                     foundNewArticle = true
                     println("updateCafe: ${article.title} by ${article.name} ${article.href}")
@@ -117,7 +132,7 @@ open class CafeNotifier {
         if (foundNewArticle) {
             data.save()
         } else {
-            println("updateCafe: no updates")
+            println("updateCafe: no new articles.")
         }
     }
 }

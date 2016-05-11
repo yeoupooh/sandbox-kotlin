@@ -3,6 +3,7 @@ package com.subakstudio.sandbox.cafenotifier
 import org.junit.Test
 
 import org.junit.Assert.*
+import java.net.InetAddress
 
 /**
  * Created by yeoupooh on 4/20/16.
@@ -18,4 +19,14 @@ class CafeNotifierConfigTest {
         assertTrue(config.cafeIntervalMs > 0)
     }
 
+
+    @Test
+    fun getHostName() {
+        val hostName = InetAddress.getLocalHost().hostName
+        val hostAddress = InetAddress.getLocalHost().hostAddress
+        println("hostName: $hostName")
+        println("hostAddress: $hostAddress")
+        assertNotNull(hostName)
+        assertNotNull(hostAddress)
+    }
 }
