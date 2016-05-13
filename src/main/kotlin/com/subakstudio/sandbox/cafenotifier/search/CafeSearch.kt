@@ -14,7 +14,6 @@ import java.net.URLEncoder
  */
 class CafeSearch(val config: CafeNotifierConfig) {
     fun search(keyword: String): CafeSearchResult {
-        var result: CafeSearchResult = CafeSearchResult()
         var client: OkHttpClient = OkHttpClient()
         val encodedKeyword = URLEncoder.encode(keyword, "utf-8")
         val url = "http://m.cafe.naver.com/ArticleSearchList.nhn?search.query=${encodedKeyword}&search.menuid=&search.searchBy=0&search.sortBy=date&search.clubid=${config.clubId}"
@@ -25,7 +24,12 @@ class CafeSearch(val config: CafeNotifierConfig) {
                 .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36")
                 .build()
         var response: Response = client.newCall(request).execute()
-        var doc: Document = Jsoup.parse(response.body().string())
+        return parseResult(response.body().string())
+    }
+
+    fun parseResult(html: String?): CafeSearchResult {
+        var result: CafeSearchResult = CafeSearchResult()
+        var doc: Document = Jsoup.parse(html)
         var elements: Elements = doc.select("#articleList li")
         //        println("elements: $elements")
         for (ele in elements) {
@@ -35,7 +39,7 @@ class CafeSearch(val config: CafeNotifierConfig) {
             var re: Regex = Regex("nclk\\(this, 'cfs\\*n.list', '([0-9]*)', ''\\)")
             var m = re.find(onclick)
             var id: Long = 0
-            if (m?.groups?.size!! > 1) {
+            if (m != null && m?.groups?.size!! > 1) {
                 id = m?.groupValues?.get(1)!!.toLong()
                 println("groups: $id")
             }
@@ -43,7 +47,11 @@ class CafeSearch(val config: CafeNotifierConfig) {
             var text: String = ele.select(".post_area").text()
             var name: String = ele.select(".name").text()
             var time: String = ele.select(".time").text()
-            var views: Int = ele.select(".no em").text().toInt()
+            var viewsStr: String = ele.select(".no em").text()
+            var views: Int = 0
+            if (viewsStr != "-") {
+                views = viewsStr.toInt()
+            }
             println("ele: $title href=[$href]")
             result.add(CafeArticle(id, title, name, time, views, "http://m.cafe.naver.com$href", text))
         }
