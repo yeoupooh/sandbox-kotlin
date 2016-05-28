@@ -8,6 +8,7 @@ import com.pengrad.telegrambot.model.request.ReplyKeyboardHide
 import com.pengrad.telegrambot.response.GetUpdatesResponse
 import com.subakstudio.sandbox.cafenotifier.search.CafeSearch
 import com.subakstudio.sandbox.cafenotifier.search.CafeSearchResult
+import retrofit.RetrofitError
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -69,7 +70,12 @@ open class CafeNotifier {
         val limit = 100
         // seconds, default: 0
         val timeout = 0
-        response = bot?.getUpdates(offset, limit, timeout) as GetUpdatesResponse
+        try {
+            response = bot?.getUpdates(offset, limit, timeout) as GetUpdatesResponse
+        } catch (e: RetrofitError) {
+            System.err?.println(e.message)
+            return
+        }
         response.let {
             if (response.isOk) {
                 var foundNew: Boolean = false
