@@ -7,6 +7,7 @@ import com.subakstudio.sandbox.cafenotifier.CafeNotifierConfig
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
+import java.io.IOException
 import java.net.URLEncoder
 
 /**
@@ -23,8 +24,13 @@ class CafeSearch(val config: CafeNotifierConfig) {
                 // http://www.useragentstring.com/Chrome41.0.2228.0_id_19841.php
                 .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36")
                 .build()
-        var response: Response = client.newCall(request).execute()
-        return parseResult(response.body().string())
+        try {
+            var response: Response = client.newCall(request).execute()
+            return parseResult(response.body().string())
+        } catch(e: IOException) {
+            System.err?.println(e.message)
+            return CafeSearchResult()
+        }
     }
 
     fun parseResult(html: String?): CafeSearchResult {
