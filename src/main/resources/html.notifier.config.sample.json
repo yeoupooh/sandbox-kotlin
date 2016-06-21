@@ -1,0 +1,10 @@
+{
+  "telegram": {
+    "intervalSec": 1,
+    "token": "your bot token here"
+  },
+  "html": {
+    "intervalSec": 5,
+    "url": "http://www.google.com"
+  }
+}
